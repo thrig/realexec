@@ -1,0 +1,47 @@
+realexec - a real exec(3) exec, not the fake exec(n) exec for TCL
+
+see the INSTALL file for compile and install tips
+
+exec(3) support allows for "exec wrapper scripts", wherein a script does
+some work and then replaces itself with a different command. such
+wrapper scripts might typically set or unset environment variables,
+customize the flags to a program, provide logging (etc.) but should not
+be left dangling around in memory when that work is done. hence, exec(3)
+
+this implementation offers the ability to customize the environment and
+also the "name" of the program that may be different than the path used
+to execve(2) said program
+
+    package require realexec
+    real_exec -env {PATH=/usr/bin USER=jhqdoe} env
+
+see environ(7) and login(1) for more information on what a minimal
+environment should contain
+
+    package require realexec
+    real_exec -name fakename ./progname
+
+the faked name is common for shells, e.g. "-zsh" vs "zsh" at login and
+also various other programs that change their behavior depending on the
+string in argv[0]
+
+a customized environment allows various naughty things such as setting
+duplicate environment variables:
+
+    real_exec -env {PATH=/usr/bin FOO=bar FOO=zot} env
+
+more productively, one can sanitize the environment passed to TCL which
+is *not* cleaned up for duplicate environment variables like it is under
+Go or Perl; https://www.sudo.ws/repos/sudo/rev/d4dfb05db5d7 shows a
+security issue due to a failure to cleanup duplicate environment
+variables. there is also
+
+https://sourceware.org/bugzilla/show_bug.cgi?id=19749
+
+but that's busy going nowhere (last I looked)
+
+
+Alternatives
+
+taupi and tclx also contain exec(3) implementations which may be more
+suitable than this one to your needs
