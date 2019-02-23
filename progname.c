@@ -1,9 +1,3 @@
-/*
-
-tclsh> real_exec -name blah ./progname
-blah
-
-*/
 #include <stdio.h>
 int main(int argc, char *argv[])
 {

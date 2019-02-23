@@ -1,7 +1,5 @@
 realexec - a real exec(3) exec, not the fake exec(n) exec for TCL
 
-see the INSTALL file for compile and install tips
-
 exec(3) support allows for "exec wrapper scripts", wherein a script does
 some work and then replaces itself with a different command. such
 wrapper scripts might typically set or unset environment variables,
@@ -23,7 +21,7 @@ environment should contain
 
 the faked name is common for shells, e.g. "-zsh" vs "zsh" at login and
 also various other programs that change their behavior depending on the
-string in argv[0]
+contents of argv[0]
 
 a customized environment allows various naughty things such as setting
 duplicate environment variables:
@@ -39,6 +37,23 @@ variables. there is also
 https://sourceware.org/bugzilla/show_bug.cgi?id=19749
 
 but that's busy going nowhere (last I looked)
+
+
+Install
+
+realexec uses a homegrown build system, because why not. on OpenBSD 6.4
+the build might look something like
+
+    doas pkg_add tcl-8.5.19p3
+    ./Build /usr/local/lib/tcl/tcl8.5/tclConfig.sh tclsh8.5
+    ./Build /usr/local/lib/tcl/tcl8.5/tclConfig.sh tclsh8.5 test
+    ./Build /usr/local/lib/tcl/tcl8.5/tclConfig.sh tclsh8.5 install
+
+customize Build.tcl as desired; something like
+
+    set auto_path [linsert $auto_path 0 ~/lib/tcl]
+
+may be required in ~/.tclshrc to pick up on the install directory
 
 
 Alternatives

@@ -1,4 +1,4 @@
-/* realexec - the real exec(3) exec not the fake exec(n) exec for TCL */
+/* realexec - a real exec(3) exec not the fake exec(n) exec for TCL */
 
 #include <err.h>
 #include <stdlib.h>
@@ -39,7 +39,7 @@ static int real_exec(ClientData clientData, Tcl_Interp * interp, int objc,
                      Tcl_Obj * CONST objv[])
 {
     char **args, *command, *name, **newenv, *progname = NULL;
-    int i, envLength, index, ret;
+    int i, j, envLength, index, ret;
     Tcl_Obj **envPtr;
 
     newenv = environ;
@@ -65,7 +65,7 @@ static int real_exec(ClientData clientData, Tcl_Interp * interp, int objc,
             if (envLength > 0) {
                 if ((newenv = calloc(envLength + 1, sizeof(char **))) == NULL)
                     err(1, "calloc failed");
-                for (int j = 0; j < envLength; j++)
+                for (j = 0; j < envLength; j++)
                     newenv[j] = Tcl_GetString(envPtr[j]);
             }
             break;
@@ -94,13 +94,10 @@ static int real_exec(ClientData clientData, Tcl_Interp * interp, int objc,
     for (i = 0; i < objc; i++)
         args[i] = Tcl_GetString(objv[i]);
 
-    if (progname != NULL) {
-        if ((command = strdup(args[0])) == NULL)
-            err(1, "strdup failed");
+    command = args[0];
+    if (progname != NULL)
         args[0] = progname;
-    } else {
-        command = args[0];
-    }
+
     execvpe(command, args, newenv);
     err(1, "execvp failed");
 }
