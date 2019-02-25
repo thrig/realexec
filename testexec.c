@@ -14,17 +14,20 @@ Tcl_Interp *Interp = NULL;
 Tcl_Obj *Script = NULL;
 
 void run_test(void (*testfn) (void), char *msg);
-void test_env(void);
 void test_exec(void);
 void test_load(void);
 void test_name(void);
+void test_newenv(void);
+void test_oldenv(void);
 
 int main(void)
 {
     setvbuf(stdout, (char *) NULL, _IOLBF, (size_t) 0);
     run_test(test_load, "simple package require");
     run_test(test_exec, "exec 'echo foo'");
-    run_test(test_env, "custom env (only PATH and USER)");
+    /* NOTE these will fail if env(1) is not in /usr/bin */
+    run_test(test_oldenv, "usual env (only PATH and USER)");
+    run_test(test_newenv, "custom env (only PATH and fake USER)");
     run_test(test_name, "./progname only named rosebud");
     exit(0);
 }
@@ -50,19 +53,6 @@ void run_test(void (*testfn) (void), char *msg)
         err(EX_OSERR, "waitpid failed");
     if (status != 0)
         err(1, "non-zero exit for '%s': %d", msg, status);
-}
-
-void test_env(void)
-{
-    Script =
-        Tcl_NewStringObj("set auto_path [linsert $auto_path 0 [pwd]];"
-                         "package require realexec;"
-                         "real_exec -env {PATH=/usr/bin:/bin USER=jhqdoe} env;"
-                         "puts {no bueno}", -1);
-    Tcl_IncrRefCount(Script);
-    if (Tcl_EvalObjEx(Interp, Script, TCL_EVAL_GLOBAL) != TCL_OK)
-        errx(1, "TCL error: %s", Tcl_GetStringResult(Interp));
-    exit(42);
 }
 
 void test_exec(void)
@@ -95,6 +85,36 @@ void test_name(void)
                          "package require realexec;"
                          "real_exec -name rosebud ./progname;"
                          "puts {no bueno}", -1);
+    Tcl_IncrRefCount(Script);
+    if (Tcl_EvalObjEx(Interp, Script, TCL_EVAL_GLOBAL) != TCL_OK)
+        errx(1, "TCL error: %s", Tcl_GetStringResult(Interp));
+    exit(42);
+}
+
+void test_newenv(void)
+{
+    Script =
+        Tcl_NewStringObj("set auto_path [linsert $auto_path 0 [pwd]];"
+                         "package require realexec;"
+                         "real_exec -env {PATH=/usr/bin:/bin USER=jhqdoe} env;"
+                         "puts {no bueno}", -1);
+    Tcl_IncrRefCount(Script);
+    if (Tcl_EvalObjEx(Interp, Script, TCL_EVAL_GLOBAL) != TCL_OK)
+        errx(1, "TCL error: %s", Tcl_GetStringResult(Interp));
+    exit(42);
+}
+
+/* mostly to confirm that the realexec.c code is not screwing up the
+ * default environment */
+void test_oldenv(void)
+{
+    Script =
+        Tcl_NewStringObj("set auto_path [linsert $auto_path 0 [pwd]];"
+                         "package require realexec;"
+                         "set user $env(USER);"
+                         "array unset env *;"
+                         "array set env [list PATH /usr/bin USER $user];"
+                         "real_exec env;" "puts {no bueno}", -1);
     Tcl_IncrRefCount(Script);
     if (Tcl_EvalObjEx(Interp, Script, TCL_EVAL_GLOBAL) != TCL_OK)
         errx(1, "TCL error: %s", Tcl_GetStringResult(Interp));

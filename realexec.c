@@ -38,11 +38,9 @@ int Realexec_Init(Tcl_Interp * interp)
 static int real_exec(ClientData clientData, Tcl_Interp * interp, int objc,
                      Tcl_Obj * CONST objv[])
 {
-    char **args, *command, *name, **newenv, *progname = NULL;
+    char **args, *command, *name, **newenv = NULL, *progname = NULL;
     int i, j, envLength, index, ret;
     Tcl_Obj **envPtr;
-
-    newenv = environ;
 
     for (i = 1; i < objc; i++) {
         name = Tcl_GetString(objv[i]);
@@ -98,6 +96,9 @@ static int real_exec(ClientData clientData, Tcl_Interp * interp, int objc,
     if (progname != NULL)
         args[0] = progname;
 
-    execvpe(command, args, newenv);
+    if (newenv != NULL)
+        environ = newenv;
+
+    execvp(command, args);
     err(1, "execvp failed");
 }
