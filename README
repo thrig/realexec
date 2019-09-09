@@ -41,13 +41,13 @@ but that's busy going nowhere (last I looked)
 
 Install
 
-realexec uses a homegrown build system, because why not. on OpenBSD 6.4
+realexec uses a homegrown build system, because why not. on OpenBSD 6.5
 the build might look something like
 
-    doas pkg_add tcl-8.5.19p3
+    doas pkg_add tcl-8.5.19p4
     ./Build /usr/local/lib/tcl/tcl8.5/tclConfig.sh tclsh8.5
     ./Build /usr/local/lib/tcl/tcl8.5/tclConfig.sh tclsh8.5 test
-    ./Build /usr/local/lib/tcl/tcl8.5/tclConfig.sh tclsh8.5 install
+    ./Build /usr/local/lib/tcl/tcl8.5/tclConfig.sh tclsh8.5 install ~/lib/tcl
 
 customize Build.tcl as desired; something like
 

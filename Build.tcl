@@ -1,4 +1,17 @@
+# ./Build.tcl - this must be run via the ./Build exec wrapper so that a
+# tclConfig.sh can be sourced and relevant environment variables set. I
+# asked the Freenode #tcl folks at some point whether TCL could do what
+# tclConfig.sh does itself but that did not go anywhere
+#
+# (this script is modeled somewhat on the Perl Module::Build module)
+
 package require Tcl 8.5
+
+proc die {msg} {
+    global argv0
+    puts stderr "$argv0: $msg"
+    exit 1
+}
 
 proc build {} {
     global env
@@ -8,7 +21,7 @@ proc build {} {
     } elseif {$ext eq ".dylib"} {
         set link "-dynamiclib -prebind -current_version 1.0.0 -compatibility_version 1.0.0"
     } else {
-        puts stderr "$argv0: unknown extension $ext"
+        die "unknown extension $ext"
         exit 1
     }
     exec {*}"$env(TCL_CC) $env(TCL_CFLAGS_OPTIMIZE) $env(TCL_INCLUDE_SPEC) -Wall -pedantic -c realexec.c -o realexec.o"
@@ -21,10 +34,12 @@ proc clean {} {
 }
 
 proc install {} {
-    global env
+    global argv env
+    set dir [lindex $argv 1]
+    if {$dir eq ""} { die "install requires a target directory" }
     set ext $env(TCL_SHLIB_SUFFIX)
     if {![file isfile librealexec$ext]} { build }
-    set dest ~/lib/tcl/realexec
+    set dest [file join $dir realexec]
     file mkdir $dest
     file copy -force librealexec$ext $dest
     file copy -force pkgIndex.tcl $dest
@@ -42,4 +57,4 @@ proc test {} {
 set cmd [lindex $argv 0]
 if {$cmd eq ""} { set cmd build }
 if {$cmd in {build clean install test}} { $cmd; exit 0 }
-puts stderr "$argv0: unknown command: $cmd"; exit 1
+die "unknown command: $cmd"
